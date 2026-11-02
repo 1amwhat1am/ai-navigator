@@ -1,6 +1,7 @@
 "use strict";
 
-const STORAGE_KEY = "ai-navigator.progress.v1";
+const Progress = AINavigatorProgress;
+const Quiz = AINavigatorQuiz;
 
 const lessons = [
   {
@@ -144,81 +145,89 @@ const lessons = [
   }
 ];
 
-const validIds = new Set(lessons.map((lesson) => lesson.id));
 const homeView = document.getElementById("home-view");
 const lessonView = document.getElementById("lesson-view");
 const storageWarning = document.getElementById("storage-warning");
-let saveFailed = false;
-let completed = readProgress();
+// Доступ к localStorage тоже может выбросить SecurityError.
+const browserStorage = {
+  getItem: (key) => window.localStorage.getItem(key),
+  setItem: (key, value) => window.localStorage.setItem(key, value)
+};
+const progressStore = Progress.createStore(browserStorage, (message) => {
+  storageWarning.textContent = message;
+  storageWarning.hidden = !message;
+});
+let progress = progressStore.snapshot();
 let toastTimeout;
 
 function icon(name, extraClass = "") {
   return `<svg class="icon ${extraClass}" aria-hidden="true"><use href="#icon-${name}"/></svg>`;
 }
 
-function showStorageWarning(message) {
-  storageWarning.textContent = message;
-  storageWarning.hidden = false;
-}
-
-function readProgress(fallback = new Set()) {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw === null) return new Set();
-    const saved = JSON.parse(raw);
-    if (saved?.version !== 1 || !Array.isArray(saved.completedLessonIds)) {
-      throw new Error("Invalid progress format");
-    }
-    return new Set(saved.completedLessonIds.filter((id) => validIds.has(id)));
-  } catch (error) {
-    const message = error instanceof SyntaxError || error.message === "Invalid progress format"
-      ? "Сохранённые данные повреждены. Вы можете продолжить обучение; новые отметки заменят повреждённые данные."
-      : "Браузер не разрешает сохранять данные. Вы можете учиться, но после закрытия страницы отметки могут исчезнуть.";
-    showStorageWarning(message);
-    return new Set(fallback);
-  }
-}
-
-function saveProgress() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, completedLessonIds: [...completed] }));
-    saveFailed = false;
-    storageWarning.hidden = true;
-  } catch {
-    saveFailed = true;
-    showStorageWarning("Не удалось сохранить прогресс в браузере. Отметки действуют до перезагрузки страницы. Проверьте, разрешено ли хранение данных для этого сайта.");
-  }
-}
-
 function renderCards() {
   document.getElementById("lesson-grid").innerHTML = lessons.map((lesson) => {
-    const isCompleted = completed.has(lesson.id);
-    return `<article class="lesson-card${isCompleted ? " completed" : ""}" data-lesson-id="${lesson.id}">
+    const read = progress.readLessonIds.includes(lesson.id);
+    const status = Progress.status(progress, lesson.id);
+    return `<article class="lesson-card${read ? " completed" : ""}" data-lesson-id="${lesson.id}" data-status="${status.key}">
       <div class="card-top"><span class="lesson-icon ${lesson.color}">${icon(lesson.icon)}</span>
-        ${isCompleted ? `<span class="completed-badge">${icon("check")}Пройден</span>` : `<span class="lesson-number">УРОК 0${lesson.id}</span>`}
+        <span class="lesson-status status-${status.key}">${status.label}</span>
       </div>
+      <span class="lesson-number">УРОК 0${lesson.id}${lesson.id === 2 ? " · С ТЕСТОМ" : ""}</span>
       <h3><a href="#lesson-${lesson.id}">${lesson.title}</a></h3>
       <p>${lesson.description}</p>
-      <div class="card-bottom">${icon("clock")}<span>${lesson.minutes} мин</span><span class="card-practice">С практикой</span><span class="card-arrow">${icon(isCompleted ? "check" : "arrow")}</span></div>
+      <div class="card-bottom">${icon("clock")}<span>${lesson.minutes} мин</span><span class="card-practice">С практикой</span>${read ? '<span class="read-badge">Прочитан</span>' : ""}<span class="card-arrow">${icon("arrow")}</span></div>
     </article>`;
   }).join("") + `<div class="encouragement-card">${icon("leaf")}<h3>Не нужно знать всё.<br>Достаточно начать.</h3><p>Каждый урок — небольшой шаг к уверенности. У вас получится.</p></div>`;
 }
 
 function updateProgress() {
-  const count = completed.size;
+  const count = progress.readLessonIds.length;
   const percent = count / lessons.length * 100;
-  document.getElementById("completed-count").textContent = `Пройдено ${count} из ${lessons.length} уроков`;
+  const masteredCount = lessons.filter((lesson) => Progress.isMastered(progress, lesson.id)).length;
+  const masteryPercent = masteredCount / lessons.length * 100;
+  document.getElementById("completed-count").textContent = `Прочитано ${count} из 5 уроков`;
   document.getElementById("progress-percent").textContent = `${percent}%`;
   document.getElementById("progress-fill").style.width = `${percent}%`;
   document.getElementById("course-progress").setAttribute("aria-valuenow", percent);
+  document.getElementById("mastery-count").textContent = `Освоено ${masteredCount} из 5 уроков`;
+  document.getElementById("mastery-percent").textContent = `${masteryPercent}%`;
+  document.getElementById("mastery-fill").style.width = `${masteryPercent}%`;
+  document.getElementById("mastery-progress").setAttribute("aria-valuenow", masteryPercent);
   document.getElementById("progress-description").textContent = count === 0
-    ? "Первый шаг — самый интересный. Начнём?"
-    : count === lessons.length
-      ? "Отличная работа! Все пять уроков пройдены. Возвращайтесь за вдохновением."
-      : "Вы уже ближе к новым возможностям. Продолжайте в своём темпе.";
-  const nextLesson = lessons.find((lesson) => !completed.has(lesson.id)) || lessons[0];
-  document.getElementById("continue-link").href = `#lesson-${nextLesson.id}`;
-  document.getElementById("continue-label").textContent = count === 0 ? "Начать обучение" : count === lessons.length ? "Повторить уроки" : "Продолжить обучение";
+    ? "Открытие урока не считается отметкой прочтения."
+    : "Ознакомление с материалом и проверка знаний учитываются отдельно.";
+  const nextLesson = lessons.find((lesson) => !progress.readLessonIds.includes(lesson.id) || (lesson.id === 2 && !Progress.isMastered(progress, 2)));
+  document.getElementById("continue-link").href = `#lesson-${nextLesson?.id || 1}`;
+  document.getElementById("continue-label").textContent = !nextLesson ? "Повторить уроки" : progress.startedLessonIds.length ? "Продолжить обучение" : "Начать обучение";
+}
+
+function refreshOverview() {
+  progress = progressStore.snapshot();
+  updateProgress();
+  renderCards();
+}
+
+function mountQuiz() {
+  const container = document.getElementById("lesson-quiz");
+  if (!container) return;
+  const perform = (action, redraw) => {
+    try {
+      action();
+      refreshOverview();
+      if (redraw) mountQuiz();
+    } catch (error) {
+      showToast(error.message);
+      progressStore.refresh();
+      refreshOverview();
+      mountQuiz();
+    }
+  };
+  Quiz.mount(container, progress, {
+    persistent: progressStore.canPersist(),
+    start: () => perform(() => progressStore.startQuiz(), true),
+    answer: (draftId, questionId, choices) => perform(() => progressStore.answerQuiz(draftId, questionId, choices), false),
+    submit: (draftId, answers) => perform(() => progressStore.submitQuiz(draftId, answers), true)
+  });
 }
 
 function currentLesson() {
@@ -227,14 +236,14 @@ function currentLesson() {
 }
 
 function updateCompletionUI(lesson) {
-  const isCompleted = completed.has(lesson.id);
+  const isCompleted = progress.readLessonIds.includes(lesson.id);
   const button = document.getElementById("complete-button");
   if (!button) return;
   button.className = `button ${isCompleted ? "button-soft" : "button-dark"}`;
   button.setAttribute("aria-pressed", String(isCompleted));
-  button.innerHTML = `${icon(isCompleted ? "check" : "shield")}<span>${isCompleted ? "Отменить прохождение" : "Отметить как пройденный"}</span>`;
-  document.getElementById("completion-title").textContent = isCompleted ? "Урок пройден. Отличная работа!" : "Разобрались и попробовали?";
-  document.getElementById("completion-description").textContent = isCompleted ? "Материал всегда доступен для повторения." : "Отметьте урок, когда будете готовы. Решаете только вы.";
+  button.innerHTML = `${icon(isCompleted ? "check" : "text")}<span>${isCompleted ? "Отменить отметку прочтения" : "Отметить как прочитанный"}</span>`;
+  document.getElementById("completion-title").textContent = isCompleted ? "Материал прочитан" : "Разобрались и попробовали?";
+  document.getElementById("completion-description").textContent = isCompleted ? "Это ознакомление с материалом. Тест для этого урока появится позже." : "Отметьте прочтение, когда будете готовы. Это не подтверждает освоение.";
 }
 
 function renderLesson(lesson) {
@@ -250,13 +259,14 @@ function renderLesson(lesson) {
       ${lesson.content}
       <section class="practice" aria-labelledby="practice-title"><div class="practice-heading">${icon("spark")}ВАША ОЧЕРЕДЬ ПОПРОБОВАТЬ</div><h2 id="practice-title">${lesson.practiceTitle}</h2>${lesson.practice}</section>
     </article>
-    <section class="completion-panel" aria-label="Отметка прохождения"><div><h2 id="completion-title"></h2><p id="completion-description"></p></div><button type="button" id="complete-button" class="button"></button></section>
+    ${lesson.id === 2 ? '<section id="lesson-quiz" class="quiz-panel" aria-labelledby="quiz-title"></section>' : '<section class="completion-panel" aria-label="Отметка прочтения"><div><h2 id="completion-title"></h2><p id="completion-description"></p></div><button type="button" id="complete-button" class="button"></button></section>'}
     <nav class="lesson-navigation" aria-label="Навигация по урокам">
       ${previous ? `<a class="button button-light" href="#lesson-${previous.id}">${icon("arrow", "previous-arrow")}Предыдущий урок</a>` : `<span class="lesson-position">Первый из пяти шагов</span>`}
       ${next ? `<a class="button button-light" href="#lesson-${next.id}">Следующий урок${icon("arrow")}</a>` : `<a class="button button-light" href="#home">К моему обучению${icon("arrow")}</a>`}
     </nav>
   </div>`;
-  updateCompletionUI(lesson);
+  if (lesson.id === 2) mountQuiz();
+  else updateCompletionUI(lesson);
 }
 
 function renderRoute(moveFocus = false) {
@@ -268,7 +278,11 @@ function renderRoute(moveFocus = false) {
   document.getElementById("home-nav").setAttribute("aria-current", lesson ? "false" : "page");
   document.getElementById("topbar-title").textContent = lesson ? `Моё обучение / Урок ${lesson.id}` : "Моё обучение";
   document.title = lesson ? `${lesson.title} — AI-Навигатор` : "AI-Навигатор — ваше знакомство с AI";
-  if (lesson) renderLesson(lesson);
+  if (lesson) {
+    progressStore.markStarted(lesson.id);
+    refreshOverview();
+    renderLesson(lesson);
+  }
   if (moveFocus) {
     document.getElementById("main").focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -277,16 +291,11 @@ function renderRoute(moveFocus = false) {
 
 function toggleCompletion() {
   const lesson = currentLesson();
-  if (!lesson) return;
-  // Учитываем изменения из другой вкладки, сохраняя работу в памяти при запрете хранилища.
-  if (!saveFailed) completed = readProgress(completed);
-  if (completed.has(lesson.id)) completed.delete(lesson.id);
-  else completed.add(lesson.id);
-  saveProgress();
-  updateProgress();
-  renderCards();
+  if (!lesson || lesson.id === 2) return;
+  progressStore.toggleRead(lesson.id);
+  refreshOverview();
   updateCompletionUI(lesson);
-  document.getElementById("announcement").textContent = `${completed.has(lesson.id) ? "Урок отмечен как пройденный." : "Отметка прохождения отменена."} Прогресс: ${completed.size / lessons.length * 100}%.`;
+  document.getElementById("announcement").textContent = `${progress.readLessonIds.includes(lesson.id) ? "Материал отмечен как прочитанный." : "Отметка прочтения отменена."} Ознакомление: ${progress.readLessonIds.length / lessons.length * 100}%.`;
 }
 
 function showToast(message) {
@@ -315,11 +324,11 @@ async function copyPrompt(button) {
 const dialog = document.getElementById("info-dialog");
 const infoContent = {
   how: `${icon("path", "dialog-icon")}<h2 id="dialog-title">Маленькие шаги, новые навыки</h2>
-    <ol><li><strong>Выберите урок.</strong> Идите по порядку или начните с интересной темы. Все материалы открыты сразу.</li><li><strong>Прочитайте и попробуйте.</strong> В каждом уроке есть небольшая практика и ориентир для самопроверки.</li><li><strong>Отметьте результат.</strong> Нажмите «Отметить как пройденный» в конце урока. Чтение само по себе не меняет прогресс.</li></ol>
-    <p>Каждый урок — 20% пути. Отметку можно отменить в любой момент. Прогресс сохраняется только в этом браузере на этом устройстве; очистка данных сайта удалит отметки.</p>`,
+    <ol><li><strong>Выберите урок.</strong> Идите по порядку или начните с интересной темы. Все материалы открыты сразу.</li><li><strong>Прочитайте и попробуйте.</strong> В каждом уроке есть небольшая практика и ориентир для самопроверки.</li><li><strong>Отметьте ознакомление.</strong> В уроках 1, 3, 4 и 5 можно отметить прочтение. В уроке 2 ознакомление учитывается после завершения теста.</li><li><strong>Подтвердите знания.</strong> Урок 2 считается освоенным только после результата от 80%. Неудачная повторная попытка сохраняет прежний успех.</li></ol>
+    <p>Ознакомление и освоение считаются отдельно: каждый из пяти уроков — 20%. Пока проверка знаний доступна только в уроке 2, поэтому максимум освоения — 20%. Открытие урока даёт только статус «В процессе». Старые отметки сохранены как история ознакомления. Данные хранятся в этом браузере; очистка данных сайта удалит их.</p>`,
   about: `${icon("compass", "dialog-icon")}<h2 id="dialog-title">AI начинается с любопытства</h2>
     <p>AI-Навигатор — бесплатный вводный курс для тех, кто никогда не программировал и хочет разобраться в искусственном интеллекте.</p>
-    <p>Пять уроков, около 50 минут, понятные примеры и практика. Чтобы читать материалы и отмечать прохождение, не нужны аккаунт, платная подписка или сторонний AI-сервис.</p>
+    <p>Пять уроков, около 50 минут, понятные примеры и практика. В уроке 2 есть интерактивный тест; результат от 80% подтверждает освоение. Чтобы читать материалы и отмечать прохождение, не нужны аккаунт, платная подписка или сторонний AI-сервис.</p>
     <p>Это учебный навигатор, а не AI-чат. Приложение не отправляет ваши данные на сервер. Отметки хранятся локально в браузере.</p>`
 };
 
@@ -351,13 +360,12 @@ dialog.addEventListener("click", (event) => {
 
 window.addEventListener("hashchange", () => renderRoute(true));
 window.addEventListener("storage", (event) => {
-  if (event.key !== STORAGE_KEY && event.key !== null) return;
-  if (saveFailed) return;
-  completed = readProgress(completed);
-  updateProgress();
-  renderCards();
+  if (![Progress.STORAGE_KEY, Progress.LEGACY_KEY, null].includes(event.key)) return;
+  progressStore.refresh();
+  refreshOverview();
   const lesson = currentLesson();
-  if (lesson) updateCompletionUI(lesson);
+  if (lesson?.id === 2) mountQuiz();
+  else if (lesson) updateCompletionUI(lesson);
 });
 
 renderCards();
