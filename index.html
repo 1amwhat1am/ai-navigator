@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f6f7f4">
+    <meta name="description" content="Пять простых уроков об искусственном интеллекте. Учитесь в своём темпе: без кода, регистрации и сложных терминов.">
+    <title>AI-Навигатор — ваше знакомство с AI</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='12' fill='%23203f33'/%3E%3Cpath d='m27 12-5 12-10 4 5-12Z' fill='%23c6f4a2'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Перейти к содержимому</a>
+    <svg class="svg-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <symbol id="icon-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m16 8-2.5 5.5L8 16l2.5-5.5Z"/></symbol>
+      <symbol id="icon-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+      <symbol id="icon-path" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="18" cy="19" r="2"/><path d="M8 5h7a4 4 0 0 1 0 8H9a3 3 0 0 0 0 6h7"/></symbol>
+      <symbol id="icon-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/></symbol>
+      <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M4 12h15m-6-6 6 6-6 6"/></symbol>
+      <symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+      <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+      <symbol id="icon-spark" viewBox="0 0 24 24"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5ZM20 2v4m-2-2h4"/></symbol>
+      <symbol id="icon-chat" viewBox="0 0 24 24"><path d="M20 11.5a8 8 0 0 1-8 8H4l1.5-4a8 8 0 1 1 14.5-4Z"/><path d="M8 9h8m-8 4h5"/></symbol>
+      <symbol id="icon-text" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Zm0 0v6h6M8 13h8m-8 4h5"/></symbol>
+      <symbol id="icon-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m3 17 5-5 4 4 4-6 5 7"/></symbol>
+      <symbol id="icon-shield" viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6Z"/><path d="m8 12 3 3 5-6"/></symbol>
+      <symbol id="icon-leaf" viewBox="0 0 24 24"><path d="M19 4C9 2 3 7 5 14s14 8 14-10ZM5 21 15 10"/></symbol>
+      <symbol id="icon-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></symbol>
+      <symbol id="icon-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+      <symbol id="icon-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></symbol>
+    </svg>
+
+    <aside class="sidebar" aria-label="Основная навигация">
+      <a class="brand" href="#home" aria-label="AI-Навигатор — главная">
+        <span class="brand-mark"><svg class="icon"><use href="#icon-compass"/></svg></span>
+        <span>AI-Навигатор<span class="brand-caption">Понятный путь в мир AI</span></span>
+      </a>
+      <div class="sidebar-section-label">ВАШЕ ПРОСТРАНСТВО</div>
+      <nav class="navigation">
+        <a href="#home" class="nav-item active" id="home-nav" aria-current="page"><svg class="icon"><use href="#icon-grid"/></svg><span>Моё обучение</span><span class="nav-count">5</span></a>
+        <button type="button" class="nav-item" data-info="how"><svg class="icon"><use href="#icon-path"/></svg><span>Как это работает</span></button>
+        <button type="button" class="nav-item" data-info="about"><svg class="icon"><use href="#icon-info"/></svg><span>О курсе</span></button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="pace-note"><svg class="icon"><use href="#icon-leaf"/></svg><strong>В своём темпе</strong><p>Здесь нет дедлайнов.<br>Есть только ваше любопытство.</p></div>
+        <div class="local-note"><svg class="icon"><use href="#icon-lock"/></svg><span>Прогресс хранится<br>только в вашем браузере</span></div>
+      </div>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <span class="topbar-title" id="topbar-title">Моё обучение</span>
+        <span class="beginner-label"><span class="status-dot"></span> С нуля. Для каждого.</span>
+      </header>
+      <main id="main" tabindex="-1">
+        <div id="storage-warning" class="storage-warning" role="status" hidden>Браузер не разрешает сохранять данные. Вы можете учиться, но после закрытия страницы отметки могут исчезнуть.</div>
+        <div id="home-view">
+          <section class="hero" aria-labelledby="hero-title">
+            <div class="hero-copy">
+              <div class="eyebrow"><span class="tiny-spark">✦</span> МАЛЕНЬКИЙ КУРС. БОЛЬШОЕ НАЧАЛО.</div>
+              <h1 id="hero-title">Разберитесь в AI.<br>Начните с простого.</h1>
+              <p>Искусственный интеллект — уже часть жизни.<br class="desktop-break"> Научитесь использовать его в своей. Без кода и сложных слов.</p>
+              <a id="continue-link" class="button button-dark" href="#lesson-1"><span id="continue-label">Начать обучение</span><svg class="icon"><use href="#icon-arrow"/></svg></a>
+              <div class="hero-facts"><span>5 понятных уроков</span><span>≈ 50 минут</span><span>Бесплатно</span></div>
+            </div>
+            <div class="hero-art" aria-hidden="true">
+              <svg viewBox="0 0 390 340" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="orbit-fill" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f0ffd6"/><stop offset=".48" stop-color="#b5dc93"/><stop offset="1" stop-color="#5c966a"/></linearGradient>
+                  <linearGradient id="compass-fill" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#426c4b"/><stop offset="1" stop-color="#193e32"/></linearGradient>
+                  <linearGradient id="needle-fill" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#edffd8"/><stop offset="1" stop-color="#b4e68e"/></linearGradient>
+                  <filter id="soft-shadow" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="14" stdDeviation="13" flood-color="#254d2d" flood-opacity=".18"/></filter>
+                </defs>
+                <circle cx="198" cy="171" r="123" fill="none" stroke="#a8c990" stroke-dasharray="3 7"/>
+                <circle cx="198" cy="171" r="151" fill="none" stroke="#bcd5a4" stroke-opacity=".55"/>
+                <ellipse cx="200" cy="287" rx="91" ry="13" fill="#7b9d65" opacity=".12"/>
+                <g filter="url(#soft-shadow)" transform="rotate(-16 198 169)">
+                  <rect x="104" y="72" width="190" height="190" rx="55" fill="url(#orbit-fill)"/>
+                  <rect x="117" y="85" width="164" height="164" rx="46" fill="url(#compass-fill)"/>
+                  <circle cx="199" cy="167" r="65" fill="none" stroke="#93b487" stroke-opacity=".4"/>
+                  <path d="m228 126-14 57-45 25 13-57Z" fill="url(#needle-fill)"/>
+                  <path d="m228 126-29 41-17-16Z" fill="#f1ffe2"/>
+                  <path d="m169 208 30-41 15 16Z" fill="#8bbd73"/>
+                  <circle cx="199" cy="167" r="6" fill="#2c5039"/>
+                  <path d="M199 105v6m0 112v6m-62-62h6m112 0h6" stroke="#a6c295" stroke-width="2" stroke-linecap="round"/>
+                </g>
+                <g transform="rotate(10 312 91)" filter="url(#soft-shadow)"><rect x="280" y="60" width="62" height="62" rx="20" fill="#fcfff2"/><path d="m311 76 4 11 11 4-11 4-4 11-4-11-11-4 11-4Z" fill="#648e4a"/></g>
+                <g transform="rotate(-12 83 240)" filter="url(#soft-shadow)"><rect x="57" y="214" width="55" height="55" rx="18" fill="#fcfff2"/><path d="m73 241 8 8 15-17" fill="none" stroke="#517b45" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></g>
+                <path d="m78 98 3 8 8 3-8 3-3 8-3-8-8-3 8-3Z" fill="#6a9350"/>
+                <circle cx="303" cy="254" r="5" fill="#729b56"/><circle cx="128" cy="40" r="3" fill="#91b673"/>
+              </svg>
+              <span class="art-caption">Новое становится понятным</span>
+            </div>
+          </section>
+
+          <section class="progress-panel" aria-labelledby="progress-title">
+            <div class="progress-symbol"><svg class="icon"><use href="#icon-path"/></svg></div>
+            <div class="progress-copy"><h2 id="progress-title">Ваш путь к новым навыкам</h2><p id="progress-description">Первый шаг — самый интересный. Начнём?</p></div>
+            <div class="progress-data">
+              <div class="progress-numbers"><span id="completed-count">Пройдено 0 из 5 уроков</span><strong id="progress-percent">0%</strong></div>
+              <div class="progress-track" id="course-progress" role="progressbar" aria-label="Прогресс обучения" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-fill" class="progress-fill"></div></div>
+            </div>
+          </section>
+
+          <section class="lessons-section" aria-labelledby="lessons-title">
+            <div class="section-heading"><div><div class="section-kicker">ОТ ЛЮБОПЫТСТВА К ПРАКТИКЕ</div><h2 id="lessons-title">Ваши уроки</h2></div><span class="section-aside">По порядку или с того, что интересно</span></div>
+            <div class="lesson-grid" id="lesson-grid"></div>
+            <noscript><p class="storage-warning">Чтобы открыть уроки и сохранять прогресс, включите JavaScript в настройках браузера.</p></noscript>
+          </section>
+          <footer class="page-footer"><span>Новые навыки начинаются с любопытства.</span><span>Сделано для людей, а не для роботов <svg class="icon"><use href="#icon-spark"/></svg></span></footer>
+        </div>
+        <div id="lesson-view" hidden></div>
+      </main>
+    </div>
+    <dialog id="info-dialog" aria-labelledby="dialog-title">
+      <button class="icon-button dialog-close" type="button" aria-label="Закрыть окно"><svg class="icon"><use href="#icon-close"/></svg></button>
+      <div id="dialog-content"></div>
+    </dialog>
+    <div id="announcement" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+    <div id="toast" class="toast" role="status" hidden></div>
+  </body>
+</html>
